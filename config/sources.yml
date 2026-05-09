@@ -1,0 +1,47 @@
+{
+  "rss_feeds": [
+    {
+      "name": "UN News",
+      "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
+      "region": "Global"
+    },
+    {
+      "name": "BBC World",
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "region": "Europe"
+    },
+    {
+      "name": "Al Jazeera",
+      "url": "https://www.aljazeera.com/xml/rss/all.xml",
+      "region": "Middle East"
+    },
+    {
+      "name": "NATO News",
+      "url": "https://www.nato.int/cps/en/natohq/news.xml",
+      "region": "Europe"
+    },
+    {
+      "name": "ReliefWeb Updates",
+      "url": "https://reliefweb.int/updates/rss.xml",
+      "region": "Global"
+    }
+  ],
+  "gdelt_queries": [
+    {
+      "name": "Global geopolitics",
+      "query": "(war OR ceasefire OR sanctions OR diplomacy OR NATO OR \"United Nations\" OR border OR troops OR election OR coup OR trade OR tariff OR shipping OR energy OR nuclear)",
+      "timespan": "24h",
+      "max_records": 75,
+      "sort": "hybridrel",
+      "region": "Global"
+    },
+    {
+      "name": "Global south geopolitics",
+      "query": "(Africa OR \"Latin America\" OR \"South Asia\" OR ASEAN OR Pacific) (diplomacy OR sanctions OR election OR security OR trade OR climate OR debt)",
+      "timespan": "24h",
+      "max_records": 50,
+      "sort": "hybridrel",
+      "region": "Global"
+    }
+  ]
+}

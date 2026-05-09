@@ -1,0 +1,10 @@
+{
+  "ranking": {
+    "article_count": 2.0,
+    "domain_diversity": 2.0,
+    "region_diversity": 1.5,
+    "impact_keywords": 1.0,
+    "recency": 1.0,
+    "history_penalty": 8.0
+  }
+}

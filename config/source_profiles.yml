@@ -1,0 +1,104 @@
+{
+  "source_profiles": [
+    {
+      "domain": "news.un.org",
+      "name": "UN News",
+      "region": "Global",
+      "source_type": "official / intergovernmental",
+      "editorial_profile": "institutional UN perspective",
+      "reliability_notes": "Useful for official UN framing and statements; not a substitute for independent reporting.",
+      "warning": "official institutional source",
+      "useful_for": ["official UN statements", "humanitarian context", "diplomatic process"]
+    },
+    {
+      "domain": "bbc.co.uk",
+      "name": "BBC News",
+      "region": "United Kingdom",
+      "source_type": "public broadcaster",
+      "editorial_profile": "broadly centrist UK framing",
+      "reliability_notes": "Generally reliable for reported facts; framing can reflect UK institutional priorities.",
+      "warning": "none",
+      "useful_for": ["UK/European perspective", "general news verification"]
+    },
+    {
+      "domain": "bbc.com",
+      "name": "BBC News",
+      "region": "United Kingdom",
+      "source_type": "public broadcaster",
+      "editorial_profile": "broadly centrist UK framing",
+      "reliability_notes": "Generally reliable for reported facts; framing can reflect UK institutional priorities.",
+      "warning": "none",
+      "useful_for": ["UK/European perspective", "general news verification"]
+    },
+    {
+      "domain": "aljazeera.com",
+      "name": "Al Jazeera",
+      "region": "Qatar / Global South",
+      "source_type": "state-funded media network",
+      "editorial_profile": "often emphasizes Global South and Middle East perspectives",
+      "reliability_notes": "Useful for regional framing; be alert to Qatari state interests and editorial blind spots.",
+      "warning": "state-funded source; use for perspective/signalling, not as neutral referee",
+      "useful_for": ["Middle East perspective", "Global South framing", "regional reactions"]
+    },
+    {
+      "domain": "nato.int",
+      "name": "NATO",
+      "region": "Transatlantic",
+      "source_type": "official alliance source",
+      "editorial_profile": "institutional NATO perspective",
+      "reliability_notes": "Primary for alliance statements; inherently advocacy/positioning for NATO policy.",
+      "warning": "official institutional source",
+      "useful_for": ["official alliance statements", "defence posture", "security commitments"]
+    },
+    {
+      "domain": "reliefweb.int",
+      "name": "ReliefWeb",
+      "region": "Global",
+      "source_type": "humanitarian aggregator",
+      "editorial_profile": "humanitarian / institutional",
+      "reliability_notes": "Aggregates humanitarian reports; check original publishing organization for claims.",
+      "warning": "aggregator; verify original source",
+      "useful_for": ["humanitarian impacts", "conflict displacement", "aid operations"]
+    },
+    {
+      "domain": "reuters.com",
+      "name": "Reuters",
+      "region": "Global / UK",
+      "source_type": "wire service",
+      "editorial_profile": "wire-style market/institutional framing",
+      "reliability_notes": "Strong for fast factual reporting; concise copy may omit deeper local context.",
+      "warning": "none",
+      "useful_for": ["cross-checking facts", "market consequences", "official reactions"]
+    },
+    {
+      "domain": "apnews.com",
+      "name": "Associated Press",
+      "region": "United States / Global",
+      "source_type": "wire service",
+      "editorial_profile": "wire-style US/global framing",
+      "reliability_notes": "Generally reliable for baseline facts; still check local sources for regional nuance.",
+      "warning": "none",
+      "useful_for": ["baseline facts", "US/global framing"]
+    },
+    {
+      "domain": "theguardian.com",
+      "name": "The Guardian",
+      "region": "United Kingdom",
+      "source_type": "newspaper",
+      "editorial_profile": "left-liberal",
+      "reliability_notes": "Good for climate, rights, and politics coverage; distinguish reporting from opinion.",
+      "warning": "none",
+      "useful_for": ["left-liberal framing", "rights/climate context"]
+    },
+    {
+      "domain": "ft.com",
+      "name": "Financial Times",
+      "region": "United Kingdom / Global",
+      "source_type": "financial newspaper",
+      "editorial_profile": "market-oriented liberal internationalist",
+      "reliability_notes": "Strong for trade, finance, sanctions, and elite policy signals; many articles are paywalled.",
+      "warning": "possible paywall",
+      "useful_for": ["markets", "trade", "finance", "sanctions impact"]
+    }
+  ]
+}
