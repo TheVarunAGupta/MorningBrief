@@ -1,8 +1,5 @@
 name: Daily Geopolitics Brief
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 on:
   schedule:
     # GitHub cron is UTC, so run both possible London offsets and gate below.
@@ -55,17 +52,17 @@ jobs:
           print(f"Europe/London time is {now:%Y-%m-%d %H:%M}; should_run={should_run}")
           PY
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: steps.london_time.outputs.should_run == 'true'
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         if: steps.london_time.outputs.should_run == 'true'
         with:
           python-version: "3.12"
 
       - name: Restore news cache
         if: steps.london_time.outputs.should_run == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .cache/newsbot
           key: newsbot-${{ github.run_id }}
