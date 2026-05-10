@@ -2,13 +2,17 @@ import datetime as dt
 import unittest
 
 from newsbot.ai import (
+    ANALYSIS_SECTIONS,
     BriefAnalysis,
     DeterministicBriefGenerator,
+    DEFAULT_OUTPUT_TOKENS,
     SYSTEM_PROMPT,
     build_prompt,
+    compose_brief_markdown,
     choose_model,
     estimate_call_cost_gbp,
     estimate_text_tokens,
+    validate_analysis_markdown,
 )
 from newsbot.emailer import render_email
 from newsbot.evidence import EvidencePack, EvidenceSource
@@ -101,6 +105,7 @@ class AiAndEmailTests(unittest.TestCase):
             analysis.markdown.index("### Start Here"),
             analysis.markdown.index("### AI Roundup"),
         )
+        self.assertEqual(DEFAULT_OUTPUT_TOKENS, 4500)
 
     def test_render_email_includes_links_and_analysis(self):
         analysis = BriefAnalysis(
@@ -163,11 +168,90 @@ class AiAndEmailTests(unittest.TestCase):
         self.assertIn("professional news email journalist", SYSTEM_PROMPT)
         self.assertIn("normal reader", SYSTEM_PROMPT)
         self.assertIn("do not push an agenda", SYSTEM_PROMPT)
+        self.assertIn("Return only the analysis sections", prompt)
         self.assertIn("Start Here", prompt)
         self.assertIn("Source File", prompt)
         self.assertIn("What The Sources Say", prompt)
         self.assertIn("AI Roundup", prompt)
         self.assertIn("08/05/2026", prompt)
+
+    def test_compose_brief_keeps_source_sections_deterministic(self):
+        pack = EvidencePack(
+            title="Iran response to US proposal",
+            summary="Iran replied to a US proposal through Pakistani mediation.",
+            score=10.0,
+            complexity_score=8.0,
+            sources=[
+                EvidenceSource(
+                    title="Iran sends response to US proposal",
+                    url="https://example.com/a",
+                    source_name="Example News",
+                    author="Not listed",
+                    published_at="10/05/2026 06:00 UTC",
+                    description="Iran sent a response through Pakistan.",
+                    profile=SourceProfile(
+                        domain="example.com",
+                        name="Example News",
+                        region="Global",
+                        source_type="news",
+                        editorial_profile="center",
+                        political_bias_label="Center",
+                        political_bias_score=0,
+                        reliability_notes="Use as a baseline only.",
+                        warning="none",
+                        useful_for=[],
+                    ),
+                )
+            ],
+            weak_points=["Proposal text was not included."],
+        )
+        ai_sections = (
+            "## 1. Iran response to US proposal\n"
+            "### AI Roundup\n"
+            "This is analysis only.\n"
+            "### Alternative Explanations\n"
+            "- It may be bargaining language.\n"
+            "### Weak Points\n"
+            "- Documents are missing.\n"
+            "### Watch Next\n"
+            "- Watch for official texts.\n"
+        )
+
+        brief = compose_brief_markdown([pack], ai_sections, "2026-05-10")
+
+        self.assertLess(brief.index("### Source File"), brief.index("### AI Roundup"))
+        self.assertIn("### Fact And Claim Check", brief)
+        self.assertIn("Use as a baseline only.", brief)
+        self.assertIn("This is analysis only.", brief)
+
+    def test_validate_analysis_markdown_rejects_incomplete_story(self):
+        incomplete = (
+            "## 1. Story\n"
+            "### AI Roundup\n"
+            "Analysis.\n"
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "missing required analysis sections"):
+            validate_analysis_markdown(incomplete, story_count=1)
+
+        truncated = (
+            "## 1. Story\n"
+            "### AI Roundup\n"
+            "Analysis.\n"
+            "### Alternative Explanations\n"
+            "Another possibility.\n"
+            "### Weak Points\n"
+            "Documents are missing.\n"
+            "### Watch Next\n"
+        )
+        with self.assertRaisesRegex(RuntimeError, "empty analysis section"):
+            validate_analysis_markdown(truncated, story_count=1)
+
+        complete = (
+            "## 1. Story\n"
+            + "\n".join(f"### {section}\nText." for section in ANALYSIS_SECTIONS)
+        )
+        validate_analysis_markdown(complete, story_count=1)
 
 
 if __name__ == "__main__":

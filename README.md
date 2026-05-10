@@ -2,6 +2,8 @@
 
 Personal daily geopolitics brief generator. It gathers free news/source signals, ranks story clusters, uses source-first OpenAI analysis, and sends a Gmail email.
 
+The evidence sections are generated deterministically from collected source metadata. OpenAI is only asked to write the analysis sections, with a `4500` output-token ceiling so the brief has room to finish cleanly.
+
 ## Quick Start
 
 Run a no-cost local dry run:
@@ -27,6 +29,7 @@ Optional repository variables:
 - `OPENAI_MODEL_DAILY`, default `gpt-5.4-mini`
 - `OPENAI_MODEL_DEEP`, default `gpt-5.4`
 - `MONTHLY_COST_CAP_GBP`, default `5`
+- `MAX_STORIES`, default `5`
 
 ## Configuration
 

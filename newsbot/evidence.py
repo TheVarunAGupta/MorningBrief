@@ -27,9 +27,10 @@ class EvidencePack:
     sources: list[EvidenceSource]
     weak_points: list[str]
 
-    def to_markdown(self) -> str:
+    def to_markdown(self, index: int | None = None) -> str:
+        heading = f"## {index}. {self.title}" if index is not None else f"## {self.title}"
         lines = [
-            f"## {self.title}",
+            heading,
             "",
             "### Start Here",
             self.summary,
@@ -72,7 +73,7 @@ class EvidencePack:
         lines.extend(
             [
                 "",
-                "### Weak points / caveats",
+                "### Fact And Claim Check",
             ]
         )
         lines.extend(f"- {point}" for point in self.weak_points)
@@ -90,22 +91,46 @@ def build_evidence_packs(
             summary=_summary_from_cluster(cluster),
             score=cluster.score,
             complexity_score=cluster.complexity_score,
-            sources=[
-                EvidenceSource(
-                    title=article.title,
-                    url=article.url,
-                    source_name=article.source_name,
-                    author=article.author,
-                    published_at=_format_published_at(article.published_at),
-                    description=_clean_description(article.description),
-                    profile=profiles.lookup(article.url),
-                )
-                for article in cluster.articles[:max_sources_per_story]
-            ],
+            sources=_evidence_sources(cluster, profiles, max_sources_per_story),
             weak_points=_weak_points(cluster, profiles),
         )
         for cluster in clusters
     ]
+
+
+def _evidence_sources(
+    cluster: StoryCluster,
+    profiles: SourceProfiles,
+    max_sources_per_story: int,
+) -> list[EvidenceSource]:
+    sources = [
+        EvidenceSource(
+            title=article.title,
+            url=article.url,
+            source_name=article.source_name,
+            author=article.author,
+            published_at=_format_published_at(article.published_at),
+            description=_clean_description(article.description),
+            profile=profiles.lookup(article.url),
+        )
+        for article in cluster.articles
+    ]
+    ranked = sorted(
+        sources,
+        key=lambda source: (
+            source.profile.known,
+            bool(source.description),
+            source.profile.warning == "none",
+            source.published_at != "Not listed",
+        ),
+        reverse=True,
+    )
+    useful = [
+        source
+        for source in ranked
+        if source.profile.known or source.description
+    ]
+    return useful[:max_sources_per_story]
 
 
 def _summary_from_cluster(cluster: StoryCluster) -> str:

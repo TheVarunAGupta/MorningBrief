@@ -65,6 +65,25 @@ class StoryPipelineTests(unittest.TestCase):
         sizes = sorted(len(cluster.articles) for cluster in clusters)
         self.assertEqual(sizes, [1, 3])
 
+    def test_cluster_articles_merges_ceasefire_mediation_duplicates(self):
+        articles = [
+            self.make_article(
+                "Trump says Iran reply to US war-ending proposal is totally unacceptable",
+                "BBC",
+                "https://bbc.com/a",
+            ),
+            self.make_article(
+                "Iran replies to latest US ceasefire plan via Pakistani mediators as drones test truce",
+                "Local TV",
+                "https://local.example/b",
+            ),
+        ]
+
+        clusters = cluster_articles(articles)
+
+        self.assertEqual(len(clusters), 1)
+        self.assertEqual(len(clusters[0].articles), 2)
+
     def test_rank_clusters_rewards_source_and_region_diversity(self):
         diverse = cluster_articles(
             [
@@ -152,7 +171,7 @@ class StoryPipelineTests(unittest.TestCase):
         self.assertIn("By: Diplomatic Desk", pack.to_markdown())
         self.assertIn("Original link: https://example.com/a", pack.to_markdown())
         self.assertIn("Bias: Center-left (-1)", pack.to_markdown())
-        self.assertIn("Weak points / caveats", pack.to_markdown())
+        self.assertIn("Fact And Claim Check", pack.to_markdown())
 
 
 if __name__ == "__main__":

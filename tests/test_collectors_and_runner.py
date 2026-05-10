@@ -4,7 +4,9 @@ import unittest
 from pathlib import Path
 
 from newsbot.config import load_json_config
-from newsbot.runner import RunOptions, run_pipeline
+from newsbot.evidence import EvidencePack, EvidenceSource
+from newsbot.models import SourceProfile
+from newsbot.runner import RunOptions, evidence_quality_score, run_pipeline
 from newsbot.sources import build_gdelt_url, parse_gdelt_articles, parse_rss_feed
 
 
@@ -99,6 +101,60 @@ class CollectorsAndRunnerTests(unittest.TestCase):
         self.assertIn("Start Here", result.email.text)
         self.assertIn("Source File", result.email.text)
         self.assertFalse(result.sent)
+
+    def test_evidence_quality_rejects_unknown_sources_without_summaries(self):
+        unknown_profile = SourceProfile.unknown("unknown.example")
+        low_quality = EvidencePack(
+            title="Thin duplicate",
+            summary="Feed metadata did not provide a substantive summary.",
+            score=1.0,
+            complexity_score=1.0,
+            sources=[
+                EvidenceSource(
+                    title="Iran replies to latest ceasefire plan",
+                    url="https://unknown.example/a",
+                    source_name="unknown.example",
+                    author="Not listed",
+                    published_at="Not listed",
+                    description="",
+                    profile=unknown_profile,
+                )
+            ],
+            weak_points=["Only one source."],
+        )
+        known_profile = SourceProfile(
+            domain="example.com",
+            name="Example",
+            region="Global",
+            source_type="news",
+            editorial_profile="center",
+            political_bias_label="Center",
+            political_bias_score=0,
+            reliability_notes="Known source.",
+            warning="none",
+            useful_for=[],
+        )
+        useful = EvidencePack(
+            title="Useful story",
+            summary="A known source provided a substantive summary.",
+            score=3.0,
+            complexity_score=2.0,
+            sources=[
+                EvidenceSource(
+                    title="Useful story",
+                    url="https://example.com/a",
+                    source_name="Example",
+                    author="Reporter",
+                    published_at="10/05/2026 06:00 UTC",
+                    description="A substantive source summary is present.",
+                    profile=known_profile,
+                )
+            ],
+            weak_points=[],
+        )
+
+        self.assertEqual(evidence_quality_score(low_quality), 0)
+        self.assertGreater(evidence_quality_score(useful), 0)
 
 
 if __name__ == "__main__":

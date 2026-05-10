@@ -23,6 +23,7 @@ STOPWORDS = {
     "into",
     "is",
     "it",
+    "latest",
     "new",
     "of",
     "on",
@@ -30,8 +31,33 @@ STOPWORDS = {
     "says",
     "the",
     "to",
+    "via",
     "with",
 }
+
+CANONICAL_TERMS = {
+    "answer": "response",
+    "answered": "response",
+    "answers": "response",
+    "replied": "response",
+    "replies": "response",
+    "reply": "response",
+    "responds": "response",
+    "response": "response",
+    "mediating": "mediator",
+    "mediation": "mediator",
+    "mediator": "mediator",
+    "mediators": "mediator",
+    "pakistani": "pakistan",
+    "plans": "proposal",
+    "plan": "proposal",
+    "proposal": "proposal",
+    "proposals": "proposal",
+    "truce": "ceasefire",
+    "truces": "ceasefire",
+}
+
+RESPONSE_STORY_TERMS = {"response", "proposal", "ceasefire", "peace", "war", "mediator"}
 
 IMPACT_KEYWORDS = {
     "alliance",
@@ -70,7 +96,11 @@ IMPACT_KEYWORDS = {
 
 def title_tokens(title: str) -> set[str]:
     words = re.findall(r"[a-z0-9]+", title.lower())
-    return {word for word in words if word not in STOPWORDS and len(word) > 1}
+    return {
+        CANONICAL_TERMS.get(word, word)
+        for word in words
+        if word not in STOPWORDS and len(word) > 1
+    }
 
 
 def fingerprint_article(article: Article) -> str:
@@ -87,12 +117,30 @@ def _similarity(first: Article, second: Article) -> float:
     return len(left & right) / len(left | right)
 
 
+def _related_signature(first: Article, second: Article) -> bool:
+    left = title_tokens(first.title)
+    right = title_tokens(second.title)
+    if "iran" not in left or "iran" not in right:
+        return False
+    if "us" not in left or "us" not in right:
+        return False
+    if not (left & {"response", "proposal", "mediator"}):
+        return False
+    if not (right & {"response", "proposal", "mediator"}):
+        return False
+    return bool(left & RESPONSE_STORY_TERMS and right & RESPONSE_STORY_TERMS)
+
+
 def cluster_articles(articles: list[Article], threshold: float = 0.28) -> list[StoryCluster]:
     clusters: list[StoryCluster] = []
     for article in articles:
         match: StoryCluster | None = None
         for cluster in clusters:
-            if any(_similarity(article, existing) >= threshold for existing in cluster.articles):
+            if any(
+                _similarity(article, existing) >= threshold
+                or _related_signature(article, existing)
+                for existing in cluster.articles
+            ):
                 match = cluster
                 break
         if match is None:

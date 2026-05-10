@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -13,7 +14,19 @@ MODEL_RATES_USD_PER_MILLION = {
     "gpt-5.4": {"input": 2.50, "output": 15.00},
 }
 
-DEFAULT_OUTPUT_TOKENS = 1800
+DEFAULT_OUTPUT_TOKENS = 4500
+ANALYSIS_SECTIONS = (
+    "AI Roundup",
+    "Alternative Explanations",
+    "Weak Points",
+    "Watch Next",
+)
+SOURCE_SECTIONS = (
+    "Start Here",
+    "Source File",
+    "What The Sources Say",
+    "Fact And Claim Check",
+)
 
 
 @dataclass(frozen=True)
@@ -61,54 +74,11 @@ def choose_model(
 
 class DeterministicBriefGenerator:
     def generate(self, packs: list[EvidencePack], run_date: str) -> BriefAnalysis:
-        lines = [
-            f"# Daily Geopolitics Brief - {run_date}",
-            "",
-            "This dry-run brief is generated without the OpenAI API. It preserves the source-first structure for local review.",
-            "",
-        ]
+        lines: list[str] = []
         for index, pack in enumerate(packs, start=1):
             lines.extend(
                 [
                     f"## {index}. {pack.title}",
-                    "",
-                    "### Start Here",
-                    pack.summary,
-                    "",
-                    "### Source File",
-                    f"Story selection score: {pack.score:.2f}",
-                    "",
-                ]
-            )
-            for source in pack.sources:
-                profile = source.profile
-                warning = "" if profile.warning == "none" else f" Warning: {profile.warning}."
-                lines.extend(
-                    [
-                        f"- **Outlet:** [{source.source_name}]({source.url})",
-                        f"  Headline: {source.title}",
-                        f"  By: {source.author}",
-                        f"  Published: {source.published_at}",
-                        f"  Type: {profile.source_type}",
-                        f"  Region: {profile.region}",
-                        f"  Source profile: "
-                        f"{profile.name}; {profile.region}; {profile.source_type}; "
-                        f"{profile.editorial_profile}.{warning}",
-                        f"  Bias: {profile.political_bias_label} ({profile.bias_score_display()})",
-                        f"  Caveat: {profile.reliability_notes or 'No curated caveat listed.'}",
-                    ]
-                )
-            lines.extend(
-                [
-                    "",
-                    "### What The Sources Say",
-                    *[
-                        f"- {source.source_name}: {source.description or 'No feed description supplied.'}"
-                        for source in pack.sources
-                    ],
-                    "",
-                    "### Fact And Claim Check",
-                    *[f"- {point}" for point in pack.weak_points],
                     "",
                     "### AI Roundup",
                     "- Why now: available source metadata points to a live diplomatic or security pressure point, but the exact causal chain needs primary-source verification.",
@@ -127,7 +97,11 @@ class DeterministicBriefGenerator:
                     "",
                 ]
             )
-        return BriefAnalysis(markdown="\n".join(lines), model="offline", estimated_cost_gbp=0.0)
+        return BriefAnalysis(
+            markdown=compose_brief_markdown(packs, "\n".join(lines), run_date),
+            model="offline",
+            estimated_cost_gbp=0.0,
+        )
 
 
 class OpenAIBriefGenerator:
@@ -186,8 +160,10 @@ class OpenAIBriefGenerator:
         except urllib.error.HTTPError as exc:
             details = exc.read().decode("utf-8", errors="replace")
             raise RuntimeError(f"OpenAI API request failed: {exc.code} {details}") from exc
+        analysis_markdown = _extract_response_text(data)
+        validate_analysis_markdown(analysis_markdown, story_count=len(packs))
         return BriefAnalysis(
-            markdown=_extract_response_text(data),
+            markdown=compose_brief_markdown(packs, analysis_markdown, run_date),
             model=model,
             estimated_cost_gbp=estimated_cost,
         )
@@ -206,39 +182,93 @@ Rules:
 - Detective analysis should explain chains of incentives: because X funds/enables/pressures Y, Z may gain or lose leverage, indirectly affecting A/B.
 - Include alternative explanations and what would change the assessment.
 - Write for a 10-minute read.
-- Use these story section names exactly: Start Here, Source File, What The Sources Say, Fact And Claim Check, AI Roundup, Alternative Explanations, Weak Points, Watch Next.
+- The source sections are generated deterministically by code. Write only the analysis sections requested by the user prompt.
 """
 
 
 def build_prompt(packs: list[EvidencePack], run_date: str) -> str:
-    source_pack_text = "\n\n".join(pack.to_markdown() for pack in packs)
+    source_pack_text = "\n\n".join(
+        pack.to_markdown(index=index)
+        for index, pack in enumerate(packs, start=1)
+    )
     display_date = _display_date(run_date)
     return f"""Run date: {display_date}
 
-Write the daily geopolitics brief from these evidence packs.
+Write the analysis layer for the daily geopolitics brief from these evidence packs.
 
-Required structure:
-# Daily Geopolitics Brief - {display_date}
+Return only the analysis sections for each story. Do not write or rewrite Start Here, Source File, What The Sources Say, or Fact And Claim Check. Those sections are inserted by code from the evidence pack.
 
 For each story:
 ## N. Story title
-### Start Here
-A short source-grounded explainer before analysis. Tell the reader what happened, who is involved, and why it is being discussed. Use only source-pack facts and avoid interpretation.
-### Source File
-Rows/bullets with outlet, author/byline if listed, source type, region, source profile, preset bias/context score, caveat, and original link.
-### What The Sources Say
-Short bullets summarising only what the linked sources say.
-### Fact And Claim Check
-Stats, definitions, missing primary sources, or context caveats.
 ### AI Roundup
-Explain the causal chain, incentives, money/security/legal/trade routes, who benefits, who loses leverage, and second-order effects.
+Explain the causal chain, incentives, money/security/legal/trade routes, who benefits, who loses leverage, and second-order effects. Keep this reader-friendly and neutral.
 ### Alternative Explanations
+Plausible explanations that would change the interpretation.
 ### Weak Points
+What the evidence pack cannot prove, where definitions may be slippery, and which claims rely on weak or partial sourcing.
 ### Watch Next
+Concrete signals to monitor: official texts, votes, sanctions lists, troop movements, budget lines, market reactions, named denials, or mediator statements.
 
 Evidence packs:
 {source_pack_text}
 """
+
+
+def compose_brief_markdown(
+    packs: list[EvidencePack],
+    analysis_markdown: str,
+    run_date: str,
+) -> str:
+    validate_analysis_markdown(analysis_markdown, story_count=len(packs))
+    display_date = _display_date(run_date)
+    lines = [f"# Daily Geopolitics Brief - {display_date}", ""]
+    for index, pack in enumerate(packs, start=1):
+        lines.extend(
+            [
+                pack.to_markdown(index=index),
+                "",
+                _extract_story_analysis(analysis_markdown, index).strip(),
+                "",
+            ]
+        )
+    return "\n".join(lines).strip() + "\n"
+
+
+def validate_analysis_markdown(markdown: str, story_count: int) -> None:
+    if story_count == 0:
+        return
+    for index in range(1, story_count + 1):
+        block = _extract_story_analysis(markdown, index)
+        missing = [
+            section
+            for section in ANALYSIS_SECTIONS
+            if f"### {section}" not in block
+        ]
+        if missing:
+            joined = ", ".join(missing)
+            raise RuntimeError(
+                f"OpenAI analysis for story {index} missing required analysis sections: {joined}"
+            )
+        empty = [
+            section
+            for section in ANALYSIS_SECTIONS
+            if not _section_body(block, section).strip()
+        ]
+        if empty:
+            joined = ", ".join(empty)
+            raise RuntimeError(
+                f"OpenAI analysis for story {index} has empty analysis section(s): {joined}"
+            )
+        source_leaks = [
+            section
+            for section in SOURCE_SECTIONS
+            if f"### {section}" in block
+        ]
+        if source_leaks:
+            joined = ", ".join(source_leaks)
+            raise RuntimeError(
+                f"OpenAI analysis for story {index} included deterministic source sections: {joined}"
+            )
 
 
 def _display_date(run_date: str) -> str:
@@ -247,6 +277,32 @@ def _display_date(run_date: str) -> str:
     except ValueError:
         return run_date
     return f"{day}/{month}/{year}"
+
+
+def _extract_story_analysis(markdown: str, story_index: int) -> str:
+    matches = list(re.finditer(r"(?m)^##\s+(\d+)\.\s+.*$", markdown))
+    if not matches:
+        if story_index == 1:
+            return markdown
+        raise RuntimeError(f"OpenAI analysis is missing story heading {story_index}.")
+    for offset, match in enumerate(matches):
+        if int(match.group(1)) != story_index:
+            continue
+        start = match.end()
+        end = matches[offset + 1].start() if offset + 1 < len(matches) else len(markdown)
+        return markdown[start:end].strip()
+    raise RuntimeError(f"OpenAI analysis is missing story heading {story_index}.")
+
+
+def _section_body(block: str, section: str) -> str:
+    pattern = re.compile(rf"(?m)^###\s+{re.escape(section)}\s*$")
+    match = pattern.search(block)
+    if not match:
+        return ""
+    next_heading = re.search(r"(?m)^###\s+", block[match.end() :])
+    if next_heading:
+        return block[match.end() : match.end() + next_heading.start()]
+    return block[match.end() :]
 
 
 def _extract_response_text(data: dict[str, object]) -> str:

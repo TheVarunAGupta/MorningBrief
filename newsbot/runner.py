@@ -9,7 +9,7 @@ from newsbot.ai import DeterministicBriefGenerator, OpenAIBriefGenerator
 from newsbot.cache import load_recent_fingerprints, save_recent_fingerprints
 from newsbot.config import load_config_dir
 from newsbot.emailer import RenderedEmail, render_email, send_email
-from newsbot.evidence import build_evidence_packs
+from newsbot.evidence import EvidencePack, build_evidence_packs
 from newsbot.profiles import SourceProfiles
 from newsbot.sample_data import sample_articles
 from newsbot.sources import collect_articles
@@ -54,8 +54,9 @@ def run_pipeline(options: RunOptions) -> RunResult:
         recent_fingerprints=recent_fingerprints,
         now=dt.datetime.combine(run_date, dt.time(7, 30), tzinfo=dt.UTC),
     )
-    selected = ranked[: options.max_stories]
-    packs = build_evidence_packs(selected, profiles)
+    selected, packs = select_story_packs(ranked, profiles, options.max_stories)
+    if not selected:
+        raise RuntimeError("No email-worthy story clusters selected.")
 
     if options.dry_run:
         analysis = DeterministicBriefGenerator().generate(packs, run_date.isoformat())
@@ -88,3 +89,35 @@ def run_pipeline(options: RunOptions) -> RunResult:
         article_count=len(articles),
         sent=sent,
     )
+
+
+def select_story_packs(
+    ranked_clusters: list,
+    profiles: SourceProfiles,
+    max_stories: int,
+) -> tuple[list, list[EvidencePack]]:
+    packs = build_evidence_packs(ranked_clusters, profiles)
+    selected_clusters = []
+    selected_packs = []
+    for cluster, pack in zip(ranked_clusters, packs):
+        if evidence_quality_score(pack) <= 0:
+            continue
+        selected_clusters.append(cluster)
+        selected_packs.append(pack)
+        if len(selected_packs) >= max_stories:
+            break
+    return selected_clusters, selected_packs
+
+
+def evidence_quality_score(pack: EvidencePack) -> int:
+    score = 0
+    for source in pack.sources:
+        if source.profile.known:
+            score += 2
+        if bool(source.description):
+            score += 1
+    if not pack.sources:
+        return 0
+    if pack.summary == "Feed metadata did not provide a substantive summary.":
+        score -= 1
+    return max(score, 0)
