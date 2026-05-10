@@ -6,6 +6,7 @@ import re
 import smtplib
 from dataclasses import dataclass
 from email.message import EmailMessage
+from typing import Literal
 
 from newsbot.ai import BriefAnalysis
 
@@ -22,18 +23,26 @@ def render_email(
     run_date,
     subject_prefix: str = "Daily Geopolitics Brief",
 ) -> RenderedEmail:
-    subject = f"{subject_prefix} - {run_date.isoformat()}"
-    html_body = markdown_to_html(analysis.markdown)
-    html_body += (
-        f"<hr><p><small>Generated with model: {html.escape(analysis.model)}. "
-        f"Estimated API cost: GBP {analysis.estimated_cost_gbp:.4f}.</small></p>"
+    display_date = format_display_date(run_date)
+    subject = f"{subject_prefix} - {display_date}"
+    html_body = render_newsletter_html(
+        markdown=analysis.markdown,
+        title=subject_prefix,
+        display_date=display_date,
+        model=analysis.model,
+        estimated_cost_gbp=analysis.estimated_cost_gbp,
     )
     text_body = (
-        analysis.markdown
+        f"{subject_prefix} - {display_date}\n\n"
+        + _remove_markdown_title(analysis.markdown)
         + f"\n\nGenerated with model: {analysis.model}. "
         + f"Estimated API cost: GBP {analysis.estimated_cost_gbp:.4f}."
     )
     return RenderedEmail(subject=subject, text=text_body, html=html_body)
+
+
+def format_display_date(run_date) -> str:
+    return run_date.strftime("%d/%m/%Y")
 
 
 def send_email(rendered: RenderedEmail) -> None:
@@ -63,50 +72,177 @@ def send_email(rendered: RenderedEmail) -> None:
         smtp.send_message(message)
 
 
+def render_newsletter_html(
+    markdown: str,
+    title: str,
+    display_date: str,
+    model: str,
+    estimated_cost_gbp: float,
+) -> str:
+    content_html = markdown_to_html(markdown)
+    return f"""<!doctype html>
+<html>
+  <body style="margin:0;padding:0;background:#f6f8fb;color:#1f2933;font-family:Arial,Helvetica,sans-serif;">
+    <div style="display:none;max-height:0;overflow:hidden;color:transparent;">
+      Source-first geopolitics brief for {html.escape(display_date)}.
+    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f8fb;margin:0;padding:24px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:760px;background:#ffffff;border:1px solid #d9e1ea;border-radius:8px;overflow:hidden;">
+            <tr>
+              <td style="background:#102a43;color:#ffffff;padding:28px 30px;">
+                <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#bcccdc;">Source-first briefing</div>
+                <h1 style="margin:8px 0 0;font-size:28px;line-height:1.2;font-weight:700;">{html.escape(title)}</h1>
+                <div style="margin-top:8px;font-size:15px;color:#d9e2ec;">{html.escape(display_date)}</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 30px 10px;">
+                <div style="border-left:4px solid #2f80ed;background:#eef5ff;padding:12px 14px;margin-bottom:20px;color:#23364d;font-size:14px;line-height:1.55;">
+                  Evidence comes first. Analysis follows after links, source profiles, and caveats so you can audit the trail before the interpretation.
+                </div>
+                <div style="border-left:4px solid #d99a20;background:#fff8e6;padding:10px 12px;margin-bottom:20px;color:#6f4e00;font-size:13px;line-height:1.5;">
+                  Source profile and bias labels are preset context cues. They are not truth scores, and official or state-funded sources are treated as perspective/signalling unless corroborated.
+                </div>
+                {content_html}
+                <div style="margin-top:28px;border-top:1px solid #d9e1ea;padding-top:14px;color:#6b7280;font-size:12px;line-height:1.5;">
+                  Generated with model: {html.escape(model)}. Estimated API cost: GBP {estimated_cost_gbp:.4f}. Source profile scores are preset editorial/context labels, not truth scores.
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>"""
+
+
 def markdown_to_html(markdown: str) -> str:
     lines: list[str] = []
-    in_list = False
+    list_mode: Literal["ul", "ol"] | None = None
+    story_open = False
+
+    def close_list() -> None:
+        nonlocal list_mode
+        if list_mode:
+            lines.append(f"</{list_mode}>")
+            list_mode = None
+
+    def close_story() -> None:
+        nonlocal story_open
+        close_list()
+        if story_open:
+            lines.append("</div></div>")
+            story_open = False
+
     for raw_line in markdown.splitlines():
         line = raw_line.rstrip()
         if not line:
-            if in_list:
-                lines.append("</ul>")
-                in_list = False
+            close_list()
             continue
         if line.startswith("# "):
-            if in_list:
-                lines.append("</ul>")
-                in_list = False
-            lines.append(f"<h1>{_inline_html(line[2:])}</h1>")
+            continue
         elif line.startswith("## "):
-            if in_list:
-                lines.append("</ul>")
-                in_list = False
-            lines.append(f"<h2>{_inline_html(line[3:])}</h2>")
+            close_story()
+            story_open = True
+            lines.append(
+                '<div style="border:1px solid #d9e1ea;border-radius:8px;'
+                'margin:0 0 22px;background:#ffffff;overflow:hidden;">'
+            )
+            lines.append(
+                '<div style="background:#f8fafc;border-bottom:1px solid #d9e1ea;'
+                'padding:16px 18px;">'
+                f'<h2 style="margin:0;color:#102a43;font-size:21px;line-height:1.3;">'
+                f"{_inline_html(line[3:])}</h2></div>"
+            )
+            lines.append('<div style="padding:16px 18px 18px;">')
         elif line.startswith("### "):
-            if in_list:
-                lines.append("</ul>")
-                in_list = False
-            lines.append(f"<h3>{_inline_html(line[4:])}</h3>")
+            close_list()
+            section = _section_title(line[4:])
+            lines.append(_section_heading(section))
         elif line.startswith("- "):
-            if not in_list:
-                lines.append("<ul>")
-                in_list = True
-            lines.append(f"<li>{_inline_html(line[2:])}</li>")
+            if list_mode != "ul":
+                close_list()
+                lines.append('<ul style="margin:8px 0 14px 20px;padding:0;color:#243b53;font-size:14px;line-height:1.55;">')
+                list_mode = "ul"
+            lines.append(f'<li style="margin:0 0 8px;">{_decorate_source_profile(_inline_html(line[2:]))}</li>')
+        elif re.match(r"^\d+\.\s+", line):
+            if list_mode != "ol":
+                close_list()
+                lines.append('<ol style="margin:8px 0 14px 20px;padding:0;color:#243b53;font-size:14px;line-height:1.55;">')
+                list_mode = "ol"
+            item = re.sub(r"^\d+\.\s+", "", line)
+            lines.append(f'<li style="margin:0 0 8px;">{_inline_html(item)}</li>')
         else:
-            if in_list:
-                lines.append("</ul>")
-                in_list = False
-            lines.append(f"<p>{_inline_html(line)}</p>")
-    if in_list:
-        lines.append("</ul>")
+            close_list()
+            lines.append(
+                '<p style="margin:0 0 12px;color:#243b53;font-size:14px;line-height:1.6;">'
+                f"{_decorate_source_profile(_inline_html(line))}</p>"
+            )
+    close_story()
     return "\n".join(lines)
+
+
+def _section_title(title: str) -> str:
+    normalized = title.strip()
+    if normalized.lower() == "source pack":
+        return "Source Pack"
+    if normalized.lower() in {"claim/stat check", "claim / stat check"}:
+        return "Fact And Claim Check"
+    return normalized[:1].upper() + normalized[1:]
+
+
+def _section_heading(title: str) -> str:
+    color = "#102a43"
+    border = "#9fb3c8"
+    background = "#f8fafc"
+    if title in {"Fact And Claim Check", "Weak points", "Weak Points"}:
+        border = "#d99a20"
+        background = "#fff8e6"
+        color = "#7c4d00"
+    elif title == "Source Pack":
+        border = "#2f80ed"
+        background = "#eef5ff"
+        color = "#173f73"
+    return (
+        f'<div style="margin:18px 0 10px;border-left:4px solid {border};'
+        f'background:{background};padding:8px 10px;">'
+        f'<h3 style="margin:0;color:{color};font-size:15px;line-height:1.3;">'
+        f"{html.escape(title)}</h3></div>"
+    )
 
 
 def _inline_html(text: str) -> str:
     escaped = html.escape(text)
-    return re.sub(
+    linked = re.sub(
         r"\[([^\]]+)\]\((https?://[^)]+)\)",
-        r'<a href="\2">\1</a>',
+        r'<a href="\2" style="color:#1d4ed8;text-decoration:underline;">\1</a>',
         escaped,
     )
+    return re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", linked)
+
+
+def _remove_markdown_title(markdown: str) -> str:
+    lines = markdown.splitlines()
+    if lines and lines[0].startswith("# "):
+        return "\n".join(lines[1:]).lstrip()
+    return markdown
+
+
+def _decorate_source_profile(text: str) -> str:
+    text = re.sub(
+        r"(Bias:\s*)([^.(<]+)(\s*\(([+-]?\d+)\))",
+        r'\1<span style="display:inline-block;background:#eef5ff;color:#173f73;border:1px solid #bfd7ff;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:700;">\2 \4</span>',
+        text,
+    )
+    text = text.replace(
+        "Source profile:",
+        '<strong style="color:#102a43;">Source profile:</strong>',
+    )
+    text = text.replace(
+        "Evidence note:",
+        '<strong style="color:#102a43;">Evidence note:</strong>',
+    )
+    return text

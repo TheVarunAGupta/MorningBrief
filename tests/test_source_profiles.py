@@ -13,6 +13,8 @@ class SourceProfileTests(unittest.TestCase):
                     "region": "Global",
                     "source_type": "news",
                     "editorial_profile": "centrist",
+                    "political_bias_label": "Center",
+                    "political_bias_score": 0,
                     "reliability_notes": "Usually factual; check opinion pieces.",
                     "warning": "none",
                     "useful_for": ["wire-style summary"],
@@ -27,6 +29,9 @@ class SourceProfileTests(unittest.TestCase):
         self.assertTrue(subdomain.known)
         self.assertEqual(exact.name, "Example News")
         self.assertEqual(subdomain.domain, "example.com")
+        self.assertEqual(exact.political_bias_label, "Center")
+        self.assertEqual(exact.political_bias_score, 0)
+        self.assertEqual(exact.bias_score_display(), "0")
 
     def test_unknown_sources_are_marked_honestly(self):
         profiles = SourceProfiles.from_records([])
@@ -36,6 +41,9 @@ class SourceProfileTests(unittest.TestCase):
         self.assertFalse(profile.known)
         self.assertEqual(profile.name, "Unknown source")
         self.assertEqual(profile.editorial_profile, "unknown")
+        self.assertEqual(profile.political_bias_label, "Unknown")
+        self.assertEqual(profile.political_bias_score, 0)
+        self.assertEqual(profile.bias_score_display(), "0")
 
 
 if __name__ == "__main__":

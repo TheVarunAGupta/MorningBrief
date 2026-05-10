@@ -6,6 +6,8 @@
       "region": "Global",
       "source_type": "official / intergovernmental",
       "editorial_profile": "institutional UN perspective",
+      "political_bias_label": "Official institution",
+      "political_bias_score": 0,
       "reliability_notes": "Useful for official UN framing and statements; not a substitute for independent reporting.",
       "warning": "official institutional source",
       "useful_for": ["official UN statements", "humanitarian context", "diplomatic process"]
@@ -16,6 +18,8 @@
       "region": "United Kingdom",
       "source_type": "public broadcaster",
       "editorial_profile": "broadly centrist UK framing",
+      "political_bias_label": "Center",
+      "political_bias_score": 0,
       "reliability_notes": "Generally reliable for reported facts; framing can reflect UK institutional priorities.",
       "warning": "none",
       "useful_for": ["UK/European perspective", "general news verification"]
@@ -26,6 +30,8 @@
       "region": "United Kingdom",
       "source_type": "public broadcaster",
       "editorial_profile": "broadly centrist UK framing",
+      "political_bias_label": "Center",
+      "political_bias_score": 0,
       "reliability_notes": "Generally reliable for reported facts; framing can reflect UK institutional priorities.",
       "warning": "none",
       "useful_for": ["UK/European perspective", "general news verification"]
@@ -36,6 +42,8 @@
       "region": "Qatar / Global South",
       "source_type": "state-funded media network",
       "editorial_profile": "often emphasizes Global South and Middle East perspectives",
+      "political_bias_label": "State-funded / regional perspective",
+      "political_bias_score": 0,
       "reliability_notes": "Useful for regional framing; be alert to Qatari state interests and editorial blind spots.",
       "warning": "state-funded source; use for perspective/signalling, not as neutral referee",
       "useful_for": ["Middle East perspective", "Global South framing", "regional reactions"]
@@ -46,6 +54,8 @@
       "region": "Transatlantic",
       "source_type": "official alliance source",
       "editorial_profile": "institutional NATO perspective",
+      "political_bias_label": "Official institution",
+      "political_bias_score": 0,
       "reliability_notes": "Primary for alliance statements; inherently advocacy/positioning for NATO policy.",
       "warning": "official institutional source",
       "useful_for": ["official alliance statements", "defence posture", "security commitments"]
@@ -56,6 +66,8 @@
       "region": "Global",
       "source_type": "humanitarian aggregator",
       "editorial_profile": "humanitarian / institutional",
+      "political_bias_label": "Humanitarian / institutional",
+      "political_bias_score": 0,
       "reliability_notes": "Aggregates humanitarian reports; check original publishing organization for claims.",
       "warning": "aggregator; verify original source",
       "useful_for": ["humanitarian impacts", "conflict displacement", "aid operations"]
@@ -66,6 +78,8 @@
       "region": "Global / UK",
       "source_type": "wire service",
       "editorial_profile": "wire-style market/institutional framing",
+      "political_bias_label": "Center / wire",
+      "political_bias_score": 0,
       "reliability_notes": "Strong for fast factual reporting; concise copy may omit deeper local context.",
       "warning": "none",
       "useful_for": ["cross-checking facts", "market consequences", "official reactions"]
@@ -76,6 +90,8 @@
       "region": "United States / Global",
       "source_type": "wire service",
       "editorial_profile": "wire-style US/global framing",
+      "political_bias_label": "Center / wire",
+      "political_bias_score": 0,
       "reliability_notes": "Generally reliable for baseline facts; still check local sources for regional nuance.",
       "warning": "none",
       "useful_for": ["baseline facts", "US/global framing"]
@@ -86,6 +102,8 @@
       "region": "United Kingdom",
       "source_type": "newspaper",
       "editorial_profile": "left-liberal",
+      "political_bias_label": "Left-liberal",
+      "political_bias_score": -1,
       "reliability_notes": "Good for climate, rights, and politics coverage; distinguish reporting from opinion.",
       "warning": "none",
       "useful_for": ["left-liberal framing", "rights/climate context"]
@@ -96,6 +114,8 @@
       "region": "United Kingdom / Global",
       "source_type": "financial newspaper",
       "editorial_profile": "market-oriented liberal internationalist",
+      "political_bias_label": "Market-oriented / liberal internationalist",
+      "political_bias_score": 0,
       "reliability_notes": "Strong for trade, finance, sanctions, and elite policy signals; many articles are paywalled.",
       "warning": "possible paywall",
       "useful_for": ["markets", "trade", "finance", "sanctions impact"]

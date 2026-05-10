@@ -44,6 +44,7 @@ class EvidencePack:
                     "  Profile: "
                     f"{profile.name}; {profile.region}; {profile.source_type}; "
                     f"{profile.editorial_profile}.{warning}",
+                    f"  Bias: {profile.political_bias_label} ({profile.bias_score_display()})",
                     f"  Evidence note: {source.description or 'No feed description supplied.'}",
                 ]
             )

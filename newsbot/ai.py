@@ -87,6 +87,7 @@ class DeterministicBriefGenerator:
                         "  Source profile: "
                         f"{profile.name}; {profile.region}; {profile.source_type}; "
                         f"{profile.editorial_profile}.{warning}",
+                        f"  Bias: {profile.political_bias_label} ({profile.bias_score_display()})",
                         f"  Evidence note: {source.description or 'No feed description supplied.'}",
                     ]
                 )
@@ -179,12 +180,15 @@ class OpenAIBriefGenerator:
         )
 
 
-SYSTEM_PROMPT = """You produce a personal daily geopolitics intelligence brief.
+SYSTEM_PROMPT = """You are a professional news email journalist writing a personal daily geopolitics brief for a normal reader.
 Rules:
+- Write in a calm, clear, reader-friendly style. Above all, do not push an agenda.
+- Be politically neutral: explain incentives and tradeoffs without telling the reader what to think.
+- Avoid dramatic language, partisan framing, moral grandstanding, and insider jargon.
 - Source pack first, analysis second. Never lead with interpretation.
 - Use only the supplied source pack. Do not invent sources or facts.
-- Keep original links visible.
-- Label state-affiliated, official, advocacy, and unknown profiles clearly.
+- Keep original links visible and clearly label each source profile and preset bias/context score.
+- Label state-affiliated, official, advocacy, and unknown profiles clearly without treating them as neutral referees.
 - Treat uncertain claims honestly: unverified, context missing, definition-dependent, or primary source not found.
 - Detective analysis should explain chains of incentives: because X funds/enables/pressures Y, Z may gain or lose leverage, indirectly affecting A/B.
 - Include alternative explanations and what would change the assessment.
@@ -194,17 +198,18 @@ Rules:
 
 def build_prompt(packs: list[EvidencePack], run_date: str) -> str:
     source_pack_text = "\n\n".join(pack.to_markdown() for pack in packs)
-    return f"""Run date: {run_date}
+    display_date = _display_date(run_date)
+    return f"""Run date: {display_date}
 
 Write the daily geopolitics brief from these evidence packs.
 
 Required structure:
-# Daily Geopolitics Brief - {run_date}
+# Daily Geopolitics Brief - {display_date}
 
 For each story:
 ## N. Story title
 ### Source pack
-Short bullets with links and source profile labels.
+Short bullets with links, source profile labels, and preset bias/context scores.
 ### Claim/stat check
 Stats, definitions, missing primary sources, or context caveats.
 ### Detective analysis
@@ -216,6 +221,14 @@ Explain the causal chain, incentives, money/security/legal/trade routes, who ben
 Evidence packs:
 {source_pack_text}
 """
+
+
+def _display_date(run_date: str) -> str:
+    try:
+        year, month, day = run_date.split("-")
+    except ValueError:
+        return run_date
+    return f"{day}/{month}/{year}"
 
 
 def _extract_response_text(data: dict[str, object]) -> str:

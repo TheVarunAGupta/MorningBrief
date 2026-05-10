@@ -21,6 +21,8 @@ class SourceProfiles:
                 region=str(record.get("region", "unknown")),
                 source_type=str(record.get("source_type", "unknown")),
                 editorial_profile=str(record.get("editorial_profile", "unknown")),
+                political_bias_label=str(record.get("political_bias_label", "Unknown")),
+                political_bias_score=int(record.get("political_bias_score", 0)),
                 reliability_notes=str(record.get("reliability_notes", "")),
                 warning=str(record.get("warning", "none")),
                 useful_for=list(record.get("useful_for", [])),

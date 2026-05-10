@@ -36,6 +36,8 @@ The files in `config/` are JSON-compatible YAML. That keeps runtime dependencies
 - `config/source_profiles.yml`: curated source labels and caveats
 - `config/ranking.yml`: story ranking weights
 
+Source profiles include preset context labels such as `political_bias_label` and `political_bias_score`. The score is a simple editorial-context scale, not a truth score: negative values indicate left/liberal lean, positive values indicate right/conservative lean, and `0` is used for center, institutional, official, wire, mixed, or non-left/right sources.
+
 ## Daily Schedule
 
 The GitHub Actions workflow has two UTC cron entries and a small Europe/London time gate. That keeps delivery aligned to about `07:30 Europe/London` across daylight saving changes, while manual workflow runs bypass the gate.

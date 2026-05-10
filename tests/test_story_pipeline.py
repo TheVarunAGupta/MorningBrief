@@ -124,6 +124,8 @@ class StoryPipelineTests(unittest.TestCase):
                     "region": "Europe",
                     "source_type": "news",
                     "editorial_profile": "center-left",
+                    "political_bias_label": "Center-left",
+                    "political_bias_score": -1,
                     "reliability_notes": "Generally reliable; verify numbers.",
                     "warning": "none",
                     "useful_for": ["European political framing"],
@@ -145,6 +147,7 @@ class StoryPipelineTests(unittest.TestCase):
         self.assertEqual(pack.title, "UN debates sanctions package after border escalation")
         self.assertEqual(pack.sources[0].profile.name, "Example News")
         self.assertIn("Original link: https://example.com/a", pack.to_markdown())
+        self.assertIn("Bias: Center-left (-1)", pack.to_markdown())
         self.assertIn("Weak points / caveats", pack.to_markdown())
 
 

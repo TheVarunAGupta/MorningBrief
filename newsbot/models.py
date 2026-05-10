@@ -22,10 +22,17 @@ class SourceProfile:
     region: str
     source_type: str
     editorial_profile: str
-    reliability_notes: str
-    warning: str
-    useful_for: list[str]
+    political_bias_label: str = "Unknown"
+    political_bias_score: int = 0
+    reliability_notes: str = ""
+    warning: str = "none"
+    useful_for: list[str] = field(default_factory=list)
     known: bool = True
+
+    def bias_score_display(self) -> str:
+        if self.political_bias_score == 0:
+            return "0"
+        return f"{self.political_bias_score:+d}"
 
     @classmethod
     def unknown(cls, domain: str) -> "SourceProfile":
@@ -35,6 +42,8 @@ class SourceProfile:
             region="unknown",
             source_type="unknown",
             editorial_profile="unknown",
+            political_bias_label="Unknown",
+            political_bias_score=0,
             reliability_notes="No curated source profile yet.",
             warning="unknown profile",
             useful_for=[],

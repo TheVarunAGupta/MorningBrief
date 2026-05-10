@@ -4,6 +4,8 @@ import unittest
 from newsbot.ai import (
     BriefAnalysis,
     DeterministicBriefGenerator,
+    SYSTEM_PROMPT,
+    build_prompt,
     choose_model,
     estimate_call_cost_gbp,
     estimate_text_tokens,
@@ -101,7 +103,7 @@ class AiAndEmailTests(unittest.TestCase):
                 "# Daily Geopolitics Brief - 2026-05-08\n\n"
                 "## 1. UN debates sanctions package\n"
                 "### Source pack\n"
-                "- [Example News](https://example.com/a)\n"
+                "- **Example News** ([link](https://example.com/a)): Source profile: Center-left; bias score -1.\n"
                 "### Detective analysis\n"
                 "Follow the money and diplomatic leverage."
             ),
@@ -115,9 +117,42 @@ class AiAndEmailTests(unittest.TestCase):
             subject_prefix="Daily Geopolitics Brief",
         )
 
-        self.assertIn("Daily Geopolitics Brief - 2026-05-08", rendered.subject)
+        self.assertIn("Daily Geopolitics Brief - 08/05/2026", rendered.subject)
+        self.assertIn("Daily Geopolitics Brief", rendered.html)
+        self.assertIn("08/05/2026", rendered.html)
+        self.assertIn("Source Pack", rendered.html)
+        self.assertIn("<strong>Example News</strong>", rendered.html)
         self.assertIn("https://example.com/a", rendered.html)
+        self.assertIn("background:#f6f8fb", rendered.html)
+        self.assertIn("border-left:4px solid #d99a20", rendered.html)
         self.assertIn("Follow the money", rendered.text)
+
+    def test_render_email_converts_numbered_lists_and_bold_text(self):
+        analysis = BriefAnalysis(
+            markdown=(
+                "# Daily Geopolitics Brief - 2026-05-08\n\n"
+                "## 1. Trade route pressure\n"
+                "### Alternative explanations\n"
+                "1. **Negotiating signal** rather than settled policy.\n"
+                "2. **Domestic politics** may be driving the timing."
+            ),
+            model="offline",
+            estimated_cost_gbp=0.0,
+        )
+
+        rendered = render_email(analysis, run_date=dt.date(2026, 5, 8))
+
+        self.assertIn("<ol", rendered.html)
+        self.assertIn("<strong>Negotiating signal</strong>", rendered.html)
+        self.assertIn("<strong>Domestic politics</strong>", rendered.html)
+
+    def test_ai_prompt_asks_for_neutral_reader_friendly_journalism(self):
+        prompt = build_prompt([], "2026-05-08")
+
+        self.assertIn("professional news email journalist", SYSTEM_PROMPT)
+        self.assertIn("normal reader", SYSTEM_PROMPT)
+        self.assertIn("do not push an agenda", SYSTEM_PROMPT)
+        self.assertIn("08/05/2026", prompt)
 
 
 if __name__ == "__main__":
