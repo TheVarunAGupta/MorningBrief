@@ -12,6 +12,7 @@ class Article:
     description: str = ""
     published_at: dt.datetime | None = None
     region: str = "Global"
+    author: str = "Not listed"
     raw: dict[str, object] = field(default_factory=dict)
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as dt
 from dataclasses import dataclass
 
 from newsbot.models import SourceProfile, StoryCluster
@@ -11,6 +12,7 @@ class EvidenceSource:
     title: str
     url: str
     source_name: str
+    author: str
     published_at: str
     description: str
     profile: SourceProfile
@@ -29,9 +31,11 @@ class EvidencePack:
         lines = [
             f"## {self.title}",
             "",
-            "### Source pack",
-            f"Selection score: {self.score:.2f}",
-            f"Working summary: {self.summary}",
+            "### Start Here",
+            self.summary,
+            "",
+            "### Source File",
+            f"Story selection score: {self.score:.2f}",
             "",
         ]
         for source in self.sources:
@@ -39,16 +43,38 @@ class EvidencePack:
             warning = "" if profile.warning == "none" else f" Warning: {profile.warning}."
             lines.extend(
                 [
-                    f"- {source.source_name}: {source.title}",
+                    f"- **Outlet:** [{source.source_name}]({source.url})",
+                    f"  Headline: {source.title}",
+                    f"  By: {source.author}",
+                    f"  Published: {source.published_at}",
+                    f"  Type: {profile.source_type}",
+                    f"  Region: {profile.region}",
                     f"  Original link: {source.url}",
-                    "  Profile: "
+                    "  Source profile: "
                     f"{profile.name}; {profile.region}; {profile.source_type}; "
                     f"{profile.editorial_profile}.{warning}",
                     f"  Bias: {profile.political_bias_label} ({profile.bias_score_display()})",
-                    f"  Evidence note: {source.description or 'No feed description supplied.'}",
+                    f"  Caveat: {profile.reliability_notes or 'No curated caveat listed.'}",
                 ]
             )
-        lines.extend(["", "### Weak points / caveats"])
+        lines.extend(
+            [
+                "",
+                "### What The Sources Say",
+            ]
+        )
+        for source in self.sources:
+            lines.extend(
+                [
+                    f"- {source.source_name}: {source.description or 'No feed description supplied.'}",
+                ]
+            )
+        lines.extend(
+            [
+                "",
+                "### Weak points / caveats",
+            ]
+        )
         lines.extend(f"- {point}" for point in self.weak_points)
         return "\n".join(lines)
 
@@ -69,9 +95,8 @@ def build_evidence_packs(
                     title=article.title,
                     url=article.url,
                     source_name=article.source_name,
-                    published_at=article.published_at.isoformat()
-                    if article.published_at
-                    else "unknown",
+                    author=article.author,
+                    published_at=_format_published_at(article.published_at),
                     description=_clean_description(article.description),
                     profile=profiles.lookup(article.url),
                 )
@@ -114,3 +139,9 @@ def _weak_points(cluster: StoryCluster, profiles: SourceProfiles) -> list[str]:
 
 def _clean_description(description: str) -> str:
     return " ".join(description.replace("\n", " ").split())
+
+
+def _format_published_at(published_at: dt.datetime | None) -> str:
+    if published_at is None:
+        return "Not listed"
+    return published_at.astimezone(dt.UTC).strftime("%d/%m/%Y %H:%M UTC")

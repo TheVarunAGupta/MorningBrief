@@ -71,6 +71,7 @@ class AiAndEmailTests(unittest.TestCase):
                     title="UN debates sanctions package",
                     url="https://example.com/a",
                     source_name="Example News",
+                    author="Diplomatic Desk",
                     published_at="2026-05-08T06:00:00+00:00",
                     description="Diplomats cite energy and border security.",
                     profile=SourceProfile(
@@ -92,9 +93,13 @@ class AiAndEmailTests(unittest.TestCase):
         analysis = DeterministicBriefGenerator().generate([pack], "2026-05-08")
 
         self.assertIn("## 1. UN debates sanctions package", analysis.markdown)
+        self.assertIn("### Start Here", analysis.markdown)
+        self.assertIn("### Source File", analysis.markdown)
+        self.assertIn("### What The Sources Say", analysis.markdown)
+        self.assertIn("### AI Roundup", analysis.markdown)
         self.assertLess(
-            analysis.markdown.index("### Source pack"),
-            analysis.markdown.index("### Detective analysis"),
+            analysis.markdown.index("### Start Here"),
+            analysis.markdown.index("### AI Roundup"),
         )
 
     def test_render_email_includes_links_and_analysis(self):
@@ -102,9 +107,11 @@ class AiAndEmailTests(unittest.TestCase):
             markdown=(
                 "# Daily Geopolitics Brief - 2026-05-08\n\n"
                 "## 1. UN debates sanctions package\n"
-                "### Source pack\n"
+                "### Start Here\n"
+                "Diplomats are debating a sanctions package after a border escalation.\n"
+                "### Source File\n"
                 "- **Example News** ([link](https://example.com/a)): Source profile: Center-left; bias score -1.\n"
-                "### Detective analysis\n"
+                "### AI Roundup\n"
                 "Follow the money and diplomatic leverage."
             ),
             model="offline",
@@ -120,10 +127,14 @@ class AiAndEmailTests(unittest.TestCase):
         self.assertIn("Daily Geopolitics Brief - 08/05/2026", rendered.subject)
         self.assertIn("Daily Geopolitics Brief", rendered.html)
         self.assertIn("08/05/2026", rendered.html)
-        self.assertIn("Source Pack", rendered.html)
+        self.assertIn("Start Here", rendered.html)
+        self.assertIn("Source File", rendered.html)
+        self.assertIn("AI Roundup", rendered.html)
         self.assertIn("<strong>Example News</strong>", rendered.html)
         self.assertIn("https://example.com/a", rendered.html)
         self.assertIn("background:#f6f8fb", rendered.html)
+        self.assertIn("max-width:840px", rendered.html)
+        self.assertIn("Briefing desk", rendered.html)
         self.assertIn("border-left:4px solid #d99a20", rendered.html)
         self.assertIn("Follow the money", rendered.text)
 
@@ -152,6 +163,10 @@ class AiAndEmailTests(unittest.TestCase):
         self.assertIn("professional news email journalist", SYSTEM_PROMPT)
         self.assertIn("normal reader", SYSTEM_PROMPT)
         self.assertIn("do not push an agenda", SYSTEM_PROMPT)
+        self.assertIn("Start Here", prompt)
+        self.assertIn("Source File", prompt)
+        self.assertIn("What The Sources Say", prompt)
+        self.assertIn("AI Roundup", prompt)
         self.assertIn("08/05/2026", prompt)
 
 

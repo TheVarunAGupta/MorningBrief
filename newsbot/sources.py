@@ -68,6 +68,7 @@ def parse_rss_feed(payload: bytes, feed: dict[str, object]) -> list[Article]:
                 description=_clean_text(_node_text(item, "description")),
                 published_at=parse_rss_datetime(_node_text(item, "pubDate")),
                 region=str(feed.get("region", "Global")),
+                author=_rss_author(item),
                 raw={"feed": feed.get("name", "")},
             )
         )
@@ -108,6 +109,7 @@ def parse_gdelt_articles(
                 description=_clean_text(str(item.get("snippet", ""))),
                 published_at=parse_gdelt_datetime(str(item.get("seendate", ""))),
                 region=str(item.get("sourceCountry") or region),
+                author="Not listed",
                 raw={"collector": source_name},
             )
         )
@@ -147,6 +149,17 @@ def parse_gdelt_datetime(value: str) -> dt.datetime | None:
 def _node_text(item: ET.Element, name: str) -> str:
     node = item.find(name)
     return node.text if node is not None and node.text else ""
+
+
+def _rss_author(item: ET.Element) -> str:
+    for candidate in ("author", "creator"):
+        value = _node_text(item, candidate)
+        if value:
+            return _clean_text(value)
+    for child in item:
+        if child.tag.lower().endswith("creator") and child.text:
+            return _clean_text(child.text)
+    return "Not listed"
 
 
 def _clean_text(value: str) -> str:

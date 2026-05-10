@@ -24,6 +24,7 @@ class CollectorsAndRunnerTests(unittest.TestCase):
           <item>
             <title>UN debates sanctions package</title>
             <link>https://example.com/story</link>
+            <author>Diplomatic Correspondent</author>
             <description>Diplomats cite energy markets.</description>
             <pubDate>Fri, 08 May 2026 06:00:00 GMT</pubDate>
           </item>
@@ -37,6 +38,7 @@ class CollectorsAndRunnerTests(unittest.TestCase):
 
         self.assertEqual(len(articles), 1)
         self.assertEqual(articles[0].title, "UN debates sanctions package")
+        self.assertEqual(articles[0].author, "Diplomatic Correspondent")
         self.assertEqual(articles[0].published_at, dt.datetime(2026, 5, 8, 6, 0, tzinfo=dt.UTC))
 
     def test_gdelt_url_encodes_query(self):
@@ -61,6 +63,7 @@ class CollectorsAndRunnerTests(unittest.TestCase):
         articles = parse_gdelt_articles(payload, source_name="GDELT", region="Global")
 
         self.assertEqual(articles[0].source_name, "example.com")
+        self.assertEqual(articles[0].author, "Not listed")
         self.assertEqual(articles[0].published_at, dt.datetime(2026, 5, 8, 6, 0, tzinfo=dt.UTC))
 
     def test_dry_run_pipeline_uses_sample_articles_when_collection_empty(self):
@@ -93,7 +96,8 @@ class CollectorsAndRunnerTests(unittest.TestCase):
             )
 
         self.assertGreaterEqual(result.selected_story_count, 1)
-        self.assertIn("Source pack", result.email.text)
+        self.assertIn("Start Here", result.email.text)
+        self.assertIn("Source File", result.email.text)
         self.assertFalse(result.sent)
 
 

@@ -89,16 +89,16 @@ def render_newsletter_html(
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f8fb;margin:0;padding:24px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:760px;background:#ffffff;border:1px solid #d9e1ea;border-radius:8px;overflow:hidden;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:840px;background:#ffffff;border:1px solid #d9e1ea;border-radius:8px;overflow:hidden;">
             <tr>
-              <td style="background:#102a43;color:#ffffff;padding:28px 30px;">
-                <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#bcccdc;">Source-first briefing</div>
+              <td style="background:#102a43;color:#ffffff;padding:30px 32px;">
+                <div style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#bcccdc;">Briefing desk</div>
                 <h1 style="margin:8px 0 0;font-size:28px;line-height:1.2;font-weight:700;">{html.escape(title)}</h1>
-                <div style="margin-top:8px;font-size:15px;color:#d9e2ec;">{html.escape(display_date)}</div>
+                <div style="margin-top:8px;font-size:15px;color:#d9e2ec;">{html.escape(display_date)} · A little calmer than the headlines.</div>
               </td>
             </tr>
             <tr>
-              <td style="padding:24px 30px 10px;">
+              <td style="padding:24px 32px 10px;">
                 <div style="border-left:4px solid #2f80ed;background:#eef5ff;padding:12px 14px;margin-bottom:20px;color:#23364d;font-size:14px;line-height:1.55;">
                   Evidence comes first. Analysis follows after links, source profiles, and caveats so you can audit the trail before the interpretation.
                 </div>
@@ -149,15 +149,15 @@ def markdown_to_html(markdown: str) -> str:
             story_open = True
             lines.append(
                 '<div style="border:1px solid #d9e1ea;border-radius:8px;'
-                'margin:0 0 22px;background:#ffffff;overflow:hidden;">'
+                'margin:0 0 24px;background:#ffffff;overflow:hidden;">'
             )
             lines.append(
                 '<div style="background:#f8fafc;border-bottom:1px solid #d9e1ea;'
-                'padding:16px 18px;">'
+                'padding:18px 20px;">'
                 f'<h2 style="margin:0;color:#102a43;font-size:21px;line-height:1.3;">'
                 f"{_inline_html(line[3:])}</h2></div>"
             )
-            lines.append('<div style="padding:16px 18px 18px;">')
+            lines.append('<div style="padding:16px 20px 20px;">')
         elif line.startswith("### "):
             close_list()
             section = _section_title(line[4:])
@@ -168,6 +168,12 @@ def markdown_to_html(markdown: str) -> str:
                 lines.append('<ul style="margin:8px 0 14px 20px;padding:0;color:#243b53;font-size:14px;line-height:1.55;">')
                 list_mode = "ul"
             lines.append(f'<li style="margin:0 0 8px;">{_decorate_source_profile(_inline_html(line[2:]))}</li>')
+        elif line.startswith("  "):
+            close_list()
+            lines.append(
+                '<p style="margin:0 0 6px 18px;color:#52606d;font-size:13px;line-height:1.45;">'
+                f"{_decorate_source_profile(_inline_html(line.strip()))}</p>"
+            )
         elif re.match(r"^\d+\.\s+", line):
             if list_mode != "ol":
                 close_list()
@@ -188,9 +194,15 @@ def markdown_to_html(markdown: str) -> str:
 def _section_title(title: str) -> str:
     normalized = title.strip()
     if normalized.lower() == "source pack":
-        return "Source Pack"
+        return "Source File"
     if normalized.lower() in {"claim/stat check", "claim / stat check"}:
         return "Fact And Claim Check"
+    if normalized.lower() == "detective analysis":
+        return "AI Roundup"
+    if normalized.lower() in {"weak points / caveats", "weak points"}:
+        return "Weak Points"
+    if normalized.lower() in {"what to watch next", "watch next"}:
+        return "Watch Next"
     return normalized[:1].upper() + normalized[1:]
 
 
@@ -198,14 +210,26 @@ def _section_heading(title: str) -> str:
     color = "#102a43"
     border = "#9fb3c8"
     background = "#f8fafc"
-    if title in {"Fact And Claim Check", "Weak points", "Weak Points"}:
+    if title in {"Fact And Claim Check", "Weak Points"}:
         border = "#d99a20"
         background = "#fff8e6"
         color = "#7c4d00"
-    elif title == "Source Pack":
+    elif title == "Source File":
         border = "#2f80ed"
         background = "#eef5ff"
         color = "#173f73"
+    elif title == "Start Here":
+        border = "#2f9e44"
+        background = "#edf9f0"
+        color = "#1f6f34"
+    elif title == "What The Sources Say":
+        border = "#7c3aed"
+        background = "#f4f0ff"
+        color = "#4c1d95"
+    elif title == "AI Roundup":
+        border = "#475569"
+        background = "#f1f5f9"
+        color = "#1e293b"
     return (
         f'<div style="margin:18px 0 10px;border-left:4px solid {border};'
         f'background:{background};padding:8px 10px;">'
@@ -245,4 +269,14 @@ def _decorate_source_profile(text: str) -> str:
         "Evidence note:",
         '<strong style="color:#102a43;">Evidence note:</strong>',
     )
+    for label in (
+        "Headline:",
+        "By:",
+        "Published:",
+        "Type:",
+        "Region:",
+        "Original link:",
+        "Caveat:",
+    ):
+        text = text.replace(label, f'<strong style="color:#102a43;">{label}</strong>')
     return text

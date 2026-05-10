@@ -72,9 +72,11 @@ class DeterministicBriefGenerator:
                 [
                     f"## {index}. {pack.title}",
                     "",
-                    "### Source pack",
-                    f"Selection score: {pack.score:.2f}",
-                    f"Working summary: {pack.summary}",
+                    "### Start Here",
+                    pack.summary,
+                    "",
+                    "### Source File",
+                    f"Story selection score: {pack.score:.2f}",
                     "",
                 ]
             )
@@ -83,33 +85,44 @@ class DeterministicBriefGenerator:
                 warning = "" if profile.warning == "none" else f" Warning: {profile.warning}."
                 lines.extend(
                     [
-                        f"- [{source.source_name}]({source.url}): {source.title}",
-                        "  Source profile: "
+                        f"- **Outlet:** [{source.source_name}]({source.url})",
+                        f"  Headline: {source.title}",
+                        f"  By: {source.author}",
+                        f"  Published: {source.published_at}",
+                        f"  Type: {profile.source_type}",
+                        f"  Region: {profile.region}",
+                        f"  Source profile: "
                         f"{profile.name}; {profile.region}; {profile.source_type}; "
                         f"{profile.editorial_profile}.{warning}",
                         f"  Bias: {profile.political_bias_label} ({profile.bias_score_display()})",
-                        f"  Evidence note: {source.description or 'No feed description supplied.'}",
+                        f"  Caveat: {profile.reliability_notes or 'No curated caveat listed.'}",
                     ]
                 )
             lines.extend(
                 [
                     "",
-                    "### Claim/stat check",
+                    "### What The Sources Say",
+                    *[
+                        f"- {source.source_name}: {source.description or 'No feed description supplied.'}"
+                        for source in pack.sources
+                    ],
+                    "",
+                    "### Fact And Claim Check",
                     *[f"- {point}" for point in pack.weak_points],
                     "",
-                    "### Detective analysis",
+                    "### AI Roundup",
                     "- Why now: available source metadata points to a live diplomatic or security pressure point, but the exact causal chain needs primary-source verification.",
                     "- Who benefits: identify states, blocs, firms, or armed groups that gain leverage if the reported move succeeds.",
                     "- Second-order effects: watch sanctions exposure, alliance signalling, energy or trade chokepoints, migration pressure, and domestic political incentives.",
                     "",
-                    "### Alternative explanations",
+                    "### Alternative Explanations",
                     "- The story may reflect negotiation signalling rather than a settled policy shift.",
                     "- Media prominence may be driven by source access or regional attention rather than underlying importance.",
                     "",
-                    "### Weak points",
+                    "### Weak Points",
                     *[f"- {point}" for point in pack.weak_points],
                     "",
-                    "### What to watch next",
+                    "### Watch Next",
                     "- Look for official texts, votes, sanctions lists, troop movements, budget lines, commodity reactions, or named denials.",
                     "",
                 ]
@@ -193,6 +206,7 @@ Rules:
 - Detective analysis should explain chains of incentives: because X funds/enables/pressures Y, Z may gain or lose leverage, indirectly affecting A/B.
 - Include alternative explanations and what would change the assessment.
 - Write for a 10-minute read.
+- Use these story section names exactly: Start Here, Source File, What The Sources Say, Fact And Claim Check, AI Roundup, Alternative Explanations, Weak Points, Watch Next.
 """
 
 
@@ -208,15 +222,19 @@ Required structure:
 
 For each story:
 ## N. Story title
-### Source pack
-Short bullets with links, source profile labels, and preset bias/context scores.
-### Claim/stat check
+### Start Here
+A short source-grounded explainer before analysis. Tell the reader what happened, who is involved, and why it is being discussed. Use only source-pack facts and avoid interpretation.
+### Source File
+Rows/bullets with outlet, author/byline if listed, source type, region, source profile, preset bias/context score, caveat, and original link.
+### What The Sources Say
+Short bullets summarising only what the linked sources say.
+### Fact And Claim Check
 Stats, definitions, missing primary sources, or context caveats.
-### Detective analysis
+### AI Roundup
 Explain the causal chain, incentives, money/security/legal/trade routes, who benefits, who loses leverage, and second-order effects.
-### Alternative explanations
-### Weak points
-### What to watch next
+### Alternative Explanations
+### Weak Points
+### Watch Next
 
 Evidence packs:
 {source_pack_text}

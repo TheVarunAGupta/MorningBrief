@@ -19,6 +19,7 @@ class StoryPipelineTests(unittest.TestCase):
             description="Diplomats said sanctions, energy, and security guarantees are all in play.",
             published_at=published_at,
             region=region,
+            author="Diplomatic Desk",
         )
 
     def test_fingerprint_is_stable_for_similar_titles(self):
@@ -146,6 +147,9 @@ class StoryPipelineTests(unittest.TestCase):
 
         self.assertEqual(pack.title, "UN debates sanctions package after border escalation")
         self.assertEqual(pack.sources[0].profile.name, "Example News")
+        self.assertIn("Start Here", pack.to_markdown())
+        self.assertIn("Source File", pack.to_markdown())
+        self.assertIn("By: Diplomatic Desk", pack.to_markdown())
         self.assertIn("Original link: https://example.com/a", pack.to_markdown())
         self.assertIn("Bias: Center-left (-1)", pack.to_markdown())
         self.assertIn("Weak points / caveats", pack.to_markdown())

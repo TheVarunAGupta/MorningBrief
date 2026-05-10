@@ -15,6 +15,7 @@ def sample_articles(run_date: dt.date) -> list[Article]:
             description="Diplomats discuss sanctions, border security, and energy exposure after a regional escalation.",
             published_at=base,
             region="Global",
+            author="UN News desk",
         ),
         Article(
             title="European ministers weigh sanctions after border escalation",
@@ -23,6 +24,7 @@ def sample_articles(run_date: dt.date) -> list[Article]:
             description="European officials say any sanctions package would need to account for energy markets and alliance unity.",
             published_at=base - dt.timedelta(hours=1),
             region="Europe",
+            author="BBC World desk",
         ),
         Article(
             title="Regional governments warn sanctions after border escalation could disrupt food and fuel trade",
@@ -31,6 +33,7 @@ def sample_articles(run_date: dt.date) -> list[Article]:
             description="Regional governments argue that sanctions could spill into fuel, shipping, and food costs.",
             published_at=base - dt.timedelta(hours=2),
             region="Middle East",
+            author="Al Jazeera news desk",
         ),
         Article(
             title="Pacific states press for climate security financing deal",
@@ -39,6 +42,7 @@ def sample_articles(run_date: dt.date) -> list[Article]:
             description="Island states frame climate finance as a security issue tied to migration, infrastructure, and regional influence.",
             published_at=base - dt.timedelta(hours=3),
             region="Oceania",
+            author="Reuters climate desk",
         ),
         Article(
             title="African Union mediators push ceasefire talks as mineral exports stall",
@@ -47,5 +51,6 @@ def sample_articles(run_date: dt.date) -> list[Article]:
             description="Mediators link ceasefire talks to export corridors, mining revenue, and outside security backing.",
             published_at=base - dt.timedelta(hours=4),
             region="Africa",
+            author="Africanews desk",
         ),
     ]
