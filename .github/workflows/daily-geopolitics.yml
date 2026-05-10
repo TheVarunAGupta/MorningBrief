@@ -1,5 +1,8 @@
 name: Daily Geopolitics Brief
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   schedule:
     # GitHub cron is UTC, so run both possible London offsets and gate below.
