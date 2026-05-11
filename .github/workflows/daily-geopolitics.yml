@@ -36,24 +36,11 @@ jobs:
       MONTHLY_COST_CAP_GBP: ${{ vars.MONTHLY_COST_CAP_GBP || '5' }}
       MAX_STORIES: ${{ inputs.max_stories || '5' }}
     steps:
+      - uses: actions/checkout@v6
+
       - name: Check London delivery time
         id: london_time
-        run: |
-          python - <<'PY'
-          import datetime as dt
-          import os
-          from zoneinfo import ZoneInfo
-
-          event_name = os.environ.get("GITHUB_EVENT_NAME", "")
-          now = dt.datetime.now(ZoneInfo("Europe/London"))
-          should_run = event_name == "workflow_dispatch" or (now.hour == 7 and now.minute == 30)
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"should_run={'true' if should_run else 'false'}\n")
-          print(f"Europe/London time is {now:%Y-%m-%d %H:%M}; should_run={should_run}")
-          PY
-
-      - uses: actions/checkout@v6
-        if: steps.london_time.outputs.should_run == 'true'
+        run: python -m newsbot.schedule
 
       - uses: actions/setup-python@v6
         if: steps.london_time.outputs.should_run == 'true'
