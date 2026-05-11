@@ -1,29 +1,54 @@
 {
   "rss_feeds": [
     {
-      "name": "UN News",
-      "url": "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
-      "region": "Global"
-    },
-    {
       "name": "BBC World",
       "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
       "region": "Europe"
     },
     {
-      "name": "Al Jazeera",
+      "name": "NPR World",
+      "url": "https://feeds.npr.org/1004/rss.xml",
+      "region": "United States / Global"
+    },
+    {
+      "name": "PBS NewsHour World",
+      "url": "https://www.pbs.org/newshour/feeds/rss/world",
+      "region": "United States / Global"
+    },
+    {
+      "name": "CBC World",
+      "url": "https://www.cbc.ca/webfeed/rss/rss-world",
+      "region": "Canada / Global"
+    },
+    {
+      "name": "France 24 English",
+      "url": "https://www.france24.com/en/rss",
+      "region": "France / Global"
+    },
+    {
+      "name": "Le Monde English",
+      "url": "https://www.lemonde.fr/en/international/rss_full.xml",
+      "region": "France / Europe"
+    },
+    {
+      "name": "The Hindu International",
+      "url": "https://www.thehindu.com/news/international/feeder/default.rss",
+      "region": "India / South Asia"
+    },
+    {
+      "name": "Channel NewsAsia",
+      "url": "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6311",
+      "region": "Singapore / Asia-Pacific"
+    },
+    {
+      "name": "Al Jazeera English",
       "url": "https://www.aljazeera.com/xml/rss/all.xml",
-      "region": "Middle East"
+      "region": "Middle East / Global South"
     },
     {
-      "name": "NATO News",
-      "url": "https://www.nato.int/cps/en/natohq/news.xml",
-      "region": "Europe"
-    },
-    {
-      "name": "ReliefWeb Updates",
-      "url": "https://reliefweb.int/updates/rss.xml",
-      "region": "Global"
+      "name": "The Guardian World",
+      "url": "https://www.theguardian.com/world/rss",
+      "region": "United Kingdom / Global"
     }
   ],
   "gdelt_queries": [

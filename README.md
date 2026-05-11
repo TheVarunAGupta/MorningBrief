@@ -39,6 +39,8 @@ The files in `config/` are JSON-compatible YAML. That keeps runtime dependencies
 - `config/source_profiles.yml`: curated source labels and caveats
 - `config/ranking.yml`: story ranking weights
 
+The default RSS set uses 10 reputable global feeds: BBC World, NPR World, PBS NewsHour World, CBC World, France 24 English, Le Monde English, The Hindu International, Channel NewsAsia, Al Jazeera English, and The Guardian World. GDELT remains enabled as a broad discovery layer, especially for wire-service and regional pickup that does not expose a stable public RSS feed.
+
 Source profiles include preset context labels such as `political_bias_label` and `political_bias_score`. The score is a simple editorial-context scale, not a truth score: negative values indicate left/liberal lean, positive values indicate right/conservative lean, and `0` is used for center, institutional, official, wire, mixed, or non-left/right sources.
 
 ## Daily Schedule

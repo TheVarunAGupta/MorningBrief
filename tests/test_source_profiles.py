@@ -1,5 +1,7 @@
 import unittest
+from pathlib import Path
 
+from newsbot.config import load_json_config
 from newsbot.profiles import SourceProfiles
 
 
@@ -44,6 +46,18 @@ class SourceProfileTests(unittest.TestCase):
         self.assertEqual(profile.political_bias_label, "Unknown")
         self.assertEqual(profile.political_bias_score, 0)
         self.assertEqual(profile.bias_score_display(), "0")
+
+    def test_curated_feed_domains_have_profiles(self):
+        sources = load_json_config(Path("config") / "sources.yml")
+        profiles_config = load_json_config(Path("config") / "source_profiles.yml")
+        profiles = SourceProfiles.from_records(profiles_config["source_profiles"])
+
+        for feed in sources["rss_feeds"]:
+            with self.subTest(feed=feed["name"]):
+                profile = profiles.lookup(feed["url"])
+                self.assertTrue(profile.known)
+                self.assertNotEqual(profile.political_bias_label, "Unknown")
+                self.assertTrue(profile.reliability_notes)
 
 
 if __name__ == "__main__":

@@ -10,6 +10,20 @@ from newsbot.runner import RunOptions, evidence_quality_score, run_pipeline
 from newsbot.sources import build_gdelt_url, parse_gdelt_articles, parse_rss_feed
 
 
+RECOMMENDED_SOURCE_NAMES = [
+    "BBC World",
+    "NPR World",
+    "PBS NewsHour World",
+    "CBC World",
+    "France 24 English",
+    "Le Monde English",
+    "The Hindu International",
+    "Channel NewsAsia",
+    "Al Jazeera English",
+    "The Guardian World",
+]
+
+
 class CollectorsAndRunnerTests(unittest.TestCase):
     def test_load_json_compatible_yml(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -19,6 +33,14 @@ class CollectorsAndRunnerTests(unittest.TestCase):
             loaded = load_json_config(path)
 
         self.assertEqual(loaded["source_profiles"][0]["domain"], "example.com")
+
+    def test_curated_source_config_uses_reputable_global_feeds(self):
+        sources = load_json_config(Path("config") / "sources.yml")
+        feeds = sources["rss_feeds"]
+
+        self.assertEqual([feed["name"] for feed in feeds], RECOMMENDED_SOURCE_NAMES)
+        self.assertEqual(len(feeds), 10)
+        self.assertTrue(all(str(feed["url"]).startswith("https://") for feed in feeds))
 
     def test_parse_rss_feed_extracts_articles(self):
         xml = """<?xml version="1.0"?>

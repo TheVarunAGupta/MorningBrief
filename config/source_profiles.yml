@@ -37,6 +37,18 @@
       "useful_for": ["UK/European perspective", "general news verification"]
     },
     {
+      "domain": "feeds.bbci.co.uk",
+      "name": "BBC News",
+      "region": "United Kingdom",
+      "source_type": "public broadcaster",
+      "editorial_profile": "broadly centrist UK framing",
+      "political_bias_label": "Center",
+      "political_bias_score": 0,
+      "reliability_notes": "Generally reliable for reported facts; framing can reflect UK institutional priorities.",
+      "warning": "none",
+      "useful_for": ["UK/European perspective", "general news verification"]
+    },
+    {
       "domain": "aljazeera.com",
       "name": "Al Jazeera",
       "region": "Qatar / Global South",
@@ -95,6 +107,90 @@
       "reliability_notes": "Generally reliable for baseline facts; still check local sources for regional nuance.",
       "warning": "none",
       "useful_for": ["baseline facts", "US/global framing"]
+    },
+    {
+      "domain": "npr.org",
+      "name": "NPR",
+      "region": "United States / Global",
+      "source_type": "public media / nonprofit newsroom",
+      "editorial_profile": "US public-radio framing with explanatory international coverage",
+      "political_bias_label": "Center-left / public media",
+      "political_bias_score": -1,
+      "reliability_notes": "Useful for clear explainers and US public-media framing; distinguish staff reporting from syndicated wire copy.",
+      "warning": "none",
+      "useful_for": ["US public-media framing", "explainers", "global trends"]
+    },
+    {
+      "domain": "pbs.org",
+      "name": "PBS NewsHour",
+      "region": "United States / Global",
+      "source_type": "public broadcaster / nonprofit newsroom",
+      "editorial_profile": "measured US public-broadcasting framing, often with AP reporting",
+      "political_bias_label": "Center / public media",
+      "political_bias_score": 0,
+      "reliability_notes": "Good for sober summaries and AP-backed international reporting; check byline because many items are syndicated.",
+      "warning": "none",
+      "useful_for": ["baseline facts", "AP syndication", "US public-media framing"]
+    },
+    {
+      "domain": "cbc.ca",
+      "name": "CBC News",
+      "region": "Canada / Global",
+      "source_type": "public broadcaster",
+      "editorial_profile": "Canadian public-broadcasting framing with broad world coverage",
+      "political_bias_label": "Center-left / public broadcaster",
+      "political_bias_score": -1,
+      "reliability_notes": "Generally reliable; useful for Canadian and North American framing, with some AP/Reuters material.",
+      "warning": "none",
+      "useful_for": ["Canadian perspective", "North American framing", "world reporting"]
+    },
+    {
+      "domain": "france24.com",
+      "name": "France 24",
+      "region": "France / Global",
+      "source_type": "public international broadcaster",
+      "editorial_profile": "French international public-media framing, strong on Europe, Africa, and Middle East",
+      "political_bias_label": "Publicly funded / French perspective",
+      "political_bias_score": 0,
+      "reliability_notes": "Useful for Europe, Africa, and Middle East coverage; note French public-media and foreign-policy context.",
+      "warning": "publicly funded international broadcaster; use for perspective and reporting, not as neutral referee",
+      "useful_for": ["Europe", "Africa", "Middle East", "French diplomatic context"]
+    },
+    {
+      "domain": "lemonde.fr",
+      "name": "Le Monde",
+      "region": "France / Europe",
+      "source_type": "newspaper",
+      "editorial_profile": "center-left liberal European newspaper",
+      "political_bias_label": "Center-left / liberal",
+      "political_bias_score": -1,
+      "reliability_notes": "High-quality international reporting and analysis; watch for paywalled articles and French/European framing.",
+      "warning": "possible paywall",
+      "useful_for": ["European perspective", "France", "Africa", "geopolitical analysis"]
+    },
+    {
+      "domain": "thehindu.com",
+      "name": "The Hindu",
+      "region": "India / South Asia",
+      "source_type": "newspaper",
+      "editorial_profile": "Indian national newspaper with strong South Asia and international coverage",
+      "political_bias_label": "Center-left / Indian perspective",
+      "political_bias_score": -1,
+      "reliability_notes": "Useful for South Asia and Global South framing; verify wire-sourced items and live blogs against primary sources.",
+      "warning": "none",
+      "useful_for": ["India", "South Asia", "Global South framing"]
+    },
+    {
+      "domain": "channelnewsasia.com",
+      "name": "Channel NewsAsia",
+      "region": "Singapore / Asia-Pacific",
+      "source_type": "public-service / state-linked broadcaster",
+      "editorial_profile": "Singapore and Asia-Pacific framing, with strong regional business and security coverage",
+      "political_bias_label": "State-linked / regional perspective",
+      "political_bias_score": 0,
+      "reliability_notes": "Useful for Asia-Pacific coverage; be aware of Singapore's state-linked media environment and regional diplomatic sensitivities.",
+      "warning": "state-linked media environment; use for regional perspective, not as neutral referee",
+      "useful_for": ["Asia-Pacific", "Southeast Asia", "US-China regional effects"]
     },
     {
       "domain": "theguardian.com",
