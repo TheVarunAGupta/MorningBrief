@@ -1,11 +1,14 @@
 import datetime as dt
+import json
 import unittest
+from unittest import mock
 
 from newsbot.ai import (
     ANALYSIS_SECTIONS,
     BriefAnalysis,
     DeterministicBriefGenerator,
     DEFAULT_OUTPUT_TOKENS,
+    OpenAIBriefGenerator,
     SYSTEM_PROMPT,
     build_prompt,
     compose_brief_markdown,
@@ -252,6 +255,77 @@ class AiAndEmailTests(unittest.TestCase):
             + "\n".join(f"### {section}\nText." for section in ANALYSIS_SECTIONS)
         )
         validate_analysis_markdown(complete, story_count=1)
+
+    def test_openai_generator_retries_transient_timeout(self):
+        pack = EvidencePack(
+            title="Border talks resume",
+            summary="Officials say talks resumed after a border escalation.",
+            score=7.0,
+            complexity_score=5.0,
+            sources=[
+                EvidenceSource(
+                    title="Border talks resume",
+                    url="https://example.com/talks",
+                    source_name="Example News",
+                    author="Reporter",
+                    published_at="13/05/2026 06:00 UTC",
+                    description="Talks resumed after a border escalation.",
+                    profile=SourceProfile(
+                        domain="example.com",
+                        name="Example News",
+                        region="Global",
+                        source_type="news",
+                        editorial_profile="center",
+                        political_bias_label="Center",
+                        political_bias_score=0,
+                        reliability_notes="Known source.",
+                        warning="none",
+                        useful_for=[],
+                    ),
+                )
+            ],
+            weak_points=["Official text not available."],
+        )
+        output_text = (
+            "## 1. Border talks resume\n"
+            "### AI Roundup\n"
+            "Talks may shift leverage if security guarantees become concrete.\n"
+            "### Alternative Explanations\n"
+            "- This may be public signalling.\n"
+            "### Weak Points\n"
+            "- Official text is missing.\n"
+            "### Watch Next\n"
+            "- Watch for named mediator statements.\n"
+        )
+        payload = {
+            "output": [
+                {"content": [{"type": "output_text", "text": output_text}]}
+            ]
+        }
+        observed_timeouts = []
+
+        class FakeResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                return False
+
+            def read(self):
+                return json.dumps(payload).encode("utf-8")
+
+        def fake_urlopen(request, timeout):
+            observed_timeouts.append(timeout)
+            if len(observed_timeouts) == 1:
+                raise TimeoutError("The read operation timed out")
+            return FakeResponse()
+
+        generator = OpenAIBriefGenerator(api_key="test-key")
+        with mock.patch("newsbot.ai.urllib.request.urlopen", side_effect=fake_urlopen):
+            analysis = generator.generate([pack], "2026-05-13")
+
+        self.assertEqual(observed_timeouts, [240, 240])
+        self.assertIn("Talks may shift leverage", analysis.markdown)
 
 
 if __name__ == "__main__":

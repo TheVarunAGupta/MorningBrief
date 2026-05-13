@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import socket
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -15,6 +16,9 @@ MODEL_RATES_USD_PER_MILLION = {
 }
 
 DEFAULT_OUTPUT_TOKENS = 4500
+DEFAULT_OPENAI_TIMEOUT_SECONDS = 240
+DEFAULT_OPENAI_MAX_RETRIES = 2
+TRANSIENT_HTTP_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 ANALYSIS_SECTIONS = (
     "AI Roundup",
     "Alternative Explanations",
@@ -56,6 +60,17 @@ def estimate_call_cost_gbp(
         + (output_tokens / 1_000_000) * rates["output"]
     )
     return usd * usd_to_gbp
+
+
+def _int_env(name: str, default: int, minimum: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return max(minimum, value)
 
 
 def choose_model(
@@ -112,12 +127,24 @@ class OpenAIBriefGenerator:
         deep_model: str = "gpt-5.4",
         monthly_cap_gbp: float = 5.0,
         monthly_spend_gbp: float = 0.0,
+        request_timeout_seconds: int | None = None,
+        max_retries: int | None = None,
     ) -> None:
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         self.daily_model = daily_model
         self.deep_model = deep_model
         self.monthly_cap_gbp = monthly_cap_gbp
         self.monthly_spend_gbp = monthly_spend_gbp
+        self.request_timeout_seconds = request_timeout_seconds or _int_env(
+            "OPENAI_REQUEST_TIMEOUT_SECONDS",
+            DEFAULT_OPENAI_TIMEOUT_SECONDS,
+            minimum=1,
+        )
+        self.max_retries = (
+            max(0, max_retries)
+            if max_retries is not None
+            else _int_env("OPENAI_MAX_RETRIES", DEFAULT_OPENAI_MAX_RETRIES, minimum=0)
+        )
 
     def generate(self, packs: list[EvidencePack], run_date: str) -> BriefAnalysis:
         prompt = build_prompt(packs, run_date)
@@ -154,12 +181,7 @@ class OpenAIBriefGenerator:
             },
             method="POST",
         )
-        try:
-            with urllib.request.urlopen(request, timeout=90) as response:
-                data = json.loads(response.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            details = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"OpenAI API request failed: {exc.code} {details}") from exc
+        data = self._send_request(request)
         analysis_markdown = _extract_response_text(data)
         validate_analysis_markdown(analysis_markdown, story_count=len(packs))
         return BriefAnalysis(
@@ -167,6 +189,30 @@ class OpenAIBriefGenerator:
             model=model,
             estimated_cost_gbp=estimated_cost,
         )
+
+    def _send_request(self, request: urllib.request.Request) -> dict[str, object]:
+        attempts = self.max_retries + 1
+        for attempt in range(1, attempts + 1):
+            try:
+                with urllib.request.urlopen(
+                    request,
+                    timeout=self.request_timeout_seconds,
+                ) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except urllib.error.HTTPError as exc:
+                details = exc.read().decode("utf-8", errors="replace")
+                if exc.code not in TRANSIENT_HTTP_STATUS_CODES or attempt == attempts:
+                    raise RuntimeError(
+                        f"OpenAI API request failed: {exc.code} {details}"
+                    ) from exc
+            except (TimeoutError, socket.timeout, urllib.error.URLError) as exc:
+                if attempt == attempts:
+                    raise RuntimeError(
+                        "OpenAI API request failed after "
+                        f"{attempts} attempt(s) with {self.request_timeout_seconds}s "
+                        f"timeout: {exc}"
+                    ) from exc
+        raise RuntimeError("OpenAI API request failed without returning a response.")
 
 
 SYSTEM_PROMPT = """You are a professional news email journalist writing a personal daily geopolitics brief for a normal reader.

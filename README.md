@@ -28,6 +28,8 @@ Optional repository variables:
 
 - `OPENAI_MODEL_DAILY`, default `gpt-5.4-mini`
 - `OPENAI_MODEL_DEEP`, default `gpt-5.4`
+- `OPENAI_REQUEST_TIMEOUT_SECONDS`, default `240`
+- `OPENAI_MAX_RETRIES`, default `2`
 - `MONTHLY_COST_CAP_GBP`, default `5`
 - `MAX_STORIES`, default `5`
 
